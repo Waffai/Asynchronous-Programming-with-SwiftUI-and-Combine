@@ -12,6 +12,9 @@
 		8864075A277A35B2001446A6 /* SignUpForm.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88640759277A35B2001446A6 /* SignUpForm.swift */; };
 		8864075C277A35B4001446A6 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8864075B277A35B4001446A6 /* Assets.xcassets */; };
 		8864075F277A35B4001446A6 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8864075E277A35B4001446A6 /* Preview Assets.xcassets */; };
+		F257E0142999DF5300118210 /* AuthenticationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F257E0132999DF5300118210 /* AuthenticationService.swift */; };
+		F257E0162999E06E00118210 /* UserNameAvailableMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = F257E0152999E06E00118210 /* UserNameAvailableMessage.swift */; };
+		F26134902999590F001C1EE0 /* SignUpFormViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F261348F2999590F001C1EE0 /* SignUpFormViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +23,9 @@
 		88640759277A35B2001446A6 /* SignUpForm.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpForm.swift; sourceTree = "<group>"; };
 		8864075B277A35B4001446A6 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8864075E277A35B4001446A6 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		F257E0132999DF5300118210 /* AuthenticationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationService.swift; sourceTree = "<group>"; };
+		F257E0152999E06E00118210 /* UserNameAvailableMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserNameAvailableMessage.swift; sourceTree = "<group>"; };
+		F261348F2999590F001C1EE0 /* SignUpFormViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignUpFormViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +61,9 @@
 			children = (
 				88640757277A35B2001446A6 /* SignUpFormApp.swift */,
 				88640759277A35B2001446A6 /* SignUpForm.swift */,
+				F261348F2999590F001C1EE0 /* SignUpFormViewModel.swift */,
+				F257E0132999DF5300118210 /* AuthenticationService.swift */,
+				F257E0152999E06E00118210 /* UserNameAvailableMessage.swift */,
 				8864075B277A35B4001446A6 /* Assets.xcassets */,
 				8864075D277A35B4001446A6 /* Preview Content */,
 			);
@@ -147,6 +156,9 @@
 			files = (
 				8864075A277A35B2001446A6 /* SignUpForm.swift in Sources */,
 				88640758277A35B2001446A6 /* SignUpFormApp.swift in Sources */,
+				F257E0162999E06E00118210 /* UserNameAvailableMessage.swift in Sources */,
+				F26134902999590F001C1EE0 /* SignUpFormViewModel.swift in Sources */,
+				F257E0142999DF5300118210 /* AuthenticationService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
