@@ -35,13 +35,14 @@ class SignUpFormViewModel: ObservableObject {
       .eraseToAnyPublisher()
   }()
   
-  private lazy var isUsernameAvailablePublisher: AnyPublisher<Bool, Never> = {
+  private lazy var isUsernameAvailablePublisher: AnyPublisher<Available, Never> = {
     $username
       .print("username")
       .debounce(for: 0.8, scheduler: RunLoop.main)
       .removeDuplicates()
-      .flatMap { username -> AnyPublisher<Bool, Never> in
+      .flatMap { username -> AnyPublisher<Available, Never> in
         self.authenticationService.checkUserNameAvailable(userName: username)
+              .asResult()
       }
       .receive(on: DispatchQueue.main)
       .share()
@@ -153,6 +154,42 @@ class SignUpFormViewModel: ObservableObject {
       }
       .receive(on: DispatchQueue.main)
       .assign(to: &$usernameMessage)
+      
+      isUsernameAvailablePublisher
+          .map { result in
+              
+              switch result {
+              case .failure(let error):
+                  if case APIError.transportError(_) = error {
+                      return ""
+                  } else {
+                      return error.localizedDescription
+                  }
+              case .success(let isAvailable):
+                  return isAvailable ? ""
+                  : "This name is not available"
+              }
+              
+          }
+          .assign(to: &$usernameMessage)
+      
+      
+      isUsernameAvailablePublisher
+          .map { result in
+              
+              if case .failure(let error) = result {
+                  if case APIError.transportError(_) = error {
+                      return true
+                  }
+                  return false
+              }
+              
+              if case .success(let isAvailable) = result {
+                  return isAvailable
+              }
+              return true
+          }
+          .assign(to: &$isValid)
     
     passwordStrengthPublisher
       .map {

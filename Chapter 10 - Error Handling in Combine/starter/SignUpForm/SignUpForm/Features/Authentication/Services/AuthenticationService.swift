@@ -22,6 +22,11 @@ enum NetworkError: Error {
   case encodingError(Error)
 }
 
+enum APIError: LocalizedError {
+    case invalidRequestError(String)
+    case transportError(Error)
+}
+
 struct AuthenticationService {
   
   /// 1: Fetching data using URLSession *without* using Combine
@@ -79,16 +84,41 @@ struct AuthenticationService {
   }
 
   /// 3: The same code, making full use of Combine's capabilities for mapping data
-  func checkUserNameAvailable(userName: String) -> AnyPublisher<Bool, Never> {
+  func checkUserNameAvailable(userName: String) -> AnyPublisher<Bool, Error> { // 仍然返回AnyPublisher<Book, Error>
     guard let url = URL(string: "http://127.0.0.1:8080/isUserNameAvailable?userName=\(userName)") else {
-      return Just(false).eraseToAnyPublisher()
+        return Fail(error: APIError.invalidRequestError("URL invalid")) // 如果网址不正确，返回Fail Publisher，返回错误 error参数中指定的错误
+            .eraseToAnyPublisher()
     }
     
     return URLSession.shared.dataTaskPublisher(for: url)
+      .mapError(APIError.transportError)
       .map(\.data)
       .decode(type: UserNameAvailableMessage.self, decoder: JSONDecoder())
       .map(\.isAvailable)
-      .replaceError(with: false)
       .eraseToAnyPublisher()
   }
+}
+
+typealias Available = Result<Bool, Error>
+
+
+extension Publisher {
+    func asResult() -> AnyPublisher<Result<Output, Failure>, Never> {
+        self
+            .map(Result.success) // 如果没有错误，则转换成Result枚举变量Result.success(output)
+//            .catch { error in
+//                Just(.failure(error)) // 否则，如果上游有任何错误，转换成Result.failure(error)
+//            }
+            .mapError{ error in error}
+            .eraseToAnyPublisher()
+    }
+}
+
+extension Publisher {
+    func asResult2() -> AnyPublisher<Result<Output, Failure>, Never> {
+        self
+            .map(Result.success) // 如果没有错误，则转换成Result枚举变量Result.success(output)
+            .mapError(Result.failure) // 如果有错误，则转换成Result枚举变量Result.failure(error)
+            .eraseToAnyPublisher()
+    }
 }
