@@ -24,6 +24,13 @@ class SignUpFormViewModel: ObservableObject {
   @Published var passwordStrengthValue: Double = 0.0
   @Published var passwordStrengthColor: Color = .red
   @Published var isValid: Bool = false
+    
+    
+    
+    // MARK: Dialog
+    @Published var showUpdateDialog: Bool = false
+    
+    
   
   // MARK: Username validattion
   private lazy var isUsernameLengthValidPublisher: AnyPublisher<Bool, Never> = {
@@ -61,7 +68,8 @@ class SignUpFormViewModel: ObservableObject {
       if !longEnough {
         return .tooShort
       }
-      if !available {
+      if case .failure = available {
+        
         return .notAvailable
       }
       return .valid
@@ -125,21 +133,44 @@ class SignUpFormViewModel: ObservableObject {
       .eraseToAnyPublisher()
   }()
   
-  // remove this later?
-  func isUsernameAvailable(username: String) {
-    authenticationService.checkUserNameAvailableWithCLosure(userName: username) { result in
-      if case let .success(isAvailable) = result {
-        print("Available: \(isAvailable)")
-      }
-      else if case let .failure(error) = result {
-        print(error)
-      }
-    }
-  }
+  
   
   init() {
     isFormValidPublisher
       .assign(to: &$isValid)
+    
+      isUsernameAvailablePublisher
+            .map { result in
+                switch result {
+                case .failure(let error):
+                    if case APIError.transportError(_) = error {
+                        return ""
+                    } else if case APIError.validationError(let reason) = error {
+                        return reason
+                    } else if case APIError.serverError(statusCode: _, reason: let reason, retryAfter: _) = error {
+                        return reason ?? "Server Error"
+                    } else {
+                        return error.localizedDescription
+                    }
+                case .success(let isAvailable):
+                    return isAvailable ? ""
+                    : "This name is not available"
+                }
+            }
+            .assign(to: &$usernameMessage)
+      
+      
+      isUsernameAvailablePublisher
+          .map{ result in
+              if case .failure(let error) = result {
+                  if case APIError.decodingError = error {
+                      return true
+                  }
+              }
+              return false
+              
+          }
+          .assign(to: &$showUpdateDialog)
     
     isUsernameValidPublisher
       .map { valid in
@@ -155,23 +186,7 @@ class SignUpFormViewModel: ObservableObject {
       .receive(on: DispatchQueue.main)
       .assign(to: &$usernameMessage)
       
-      isUsernameAvailablePublisher
-          .map { result in
-              
-              switch result {
-              case .failure(let error):
-                  if case APIError.transportError(_) = error {
-                      return ""
-                  } else {
-                      return error.localizedDescription
-                  }
-              case .success(let isAvailable):
-                  return isAvailable ? ""
-                  : "This name is not available"
-              }
-              
-          }
-          .assign(to: &$usernameMessage)
+     
       
       
       isUsernameAvailablePublisher
