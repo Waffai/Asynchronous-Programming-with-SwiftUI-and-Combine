@@ -98,19 +98,25 @@ struct AuthenticationService {
       }
 
     return dataTaskPublisher
-      .tryCatch { error -> AnyPublisher<(data: Data, response: URLResponse), Error> in
-        if case APIError.serverError = error {
-          return Just(Void())
-            .delay(for: 3, scheduler: DispatchQueue.global())
-            .flatMap { _ in
-              return dataTaskPublisher
+          .retry(10, withDelay: 3) {
+            if case APIError.serverError = $0 {
+              return true
             }
-            .print("before retry")
-            .retry(10)
-            .eraseToAnyPublisher()
-        }
-        throw error
-      }
+            return false
+          }
+//      .tryCatch { error -> AnyPublisher<(data: Data, response: URLResponse), Error> in
+//        if case APIError.serverError = error {
+//          return Just(Void())
+//            .delay(for: 3, scheduler: DispatchQueue.global())
+//            .flatMap { _ in
+//              return dataTaskPublisher
+//            }
+//            .print("before retry")
+//            .retry(10)
+//            .eraseToAnyPublisher()
+//        }
+//        throw error
+//      }
       .map(\.data)
 //      .decode(type: UserNameAvailableMessage.self, decoder: JSONDecoder())
       .tryMap { data -> UserNameAvailableMessage in
@@ -128,3 +134,46 @@ struct AuthenticationService {
   }
   
 }
+
+
+extension Publisher {
+    func retry<T, E>(_ retries: Int,
+                     withBackoff initialBackoff: Int,
+                     condition: ((E) -> Bool)? = nil)
+    -> Publishers.TryCatch<Self, AnyPublisher<T, E>>
+    where T == Self.Output, E == Self.Failure {
+        
+        return self.tryCatch { error -> AnyPublisher<T, E> in
+            // 如果错误满足条件，则重试
+            if condition?(error) ?? true {
+                // 初始的 backoff 值
+                var backoff = initialBackoff
+                
+                // 发出一个空元素，然后延迟指定的时间，重试原始 Publisher，得到一个新的 Publisher
+                return Just(Void())
+                    .flatMap({ _ -> AnyPublisher<T, E>  in
+                        // 延迟一段时间后重新订阅原始 Publisher，得到新的 Publisher
+                        let result  = Just(Void())
+                            .delay(for: .init(integerLiteral: backoff), scheduler: DispatchQueue.global())
+                            .flatMap{ _ in
+                                return self
+                            }
+                        // 将 backoff 乘以 2，以便下一次增加重试时间
+                        backoff = backoff * 2
+                        // 返回得到的新的 Publisher
+                        return result.eraseToAnyPublisher()
+                    })
+                    
+                    // 将新的 Publisher 再次进行重试，最多尝试 retries - 1 次
+                    .retry(retries - 1)
+                    // 将最终的 Publisher 转换为 AnyPublisher<T, E> 类型
+                    .eraseToAnyPublisher()
+            }
+            // 如果错误不满足条件，则直接抛出错误
+            else {
+                throw error
+            }
+        }
+    }
+}
+
